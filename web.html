@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>VOID STORE | PUBG Mobile</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --gold: #ffca05;
+    --black: #050607;
+    --card: #101317;
+    --white: #f5f5f5;
+    --gray: #a9b0ba;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--black);
+    color: var(--white);
+    line-height: 1.6;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 6%;
+    border-bottom: 1px solid #292929;
+    background: #08090b;
+}
+
+.logo {
+    color: var(--gold);
+    font-size: 25px;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-align: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 14px;
+    font-size: 12px;
+}
+
+nav a:hover {
+    color: var(--gold);
+}
+
+.hero {
+    padding: 65px 7%;
+    background:
+        radial-gradient(ellipse at right, #55400b 0%, transparent 48%),
+        linear-gradient(120deg, #08090b, #171717);
+}
+
+.tag {
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 3px;
+}
+
+.hero h1 {
+    font-size: clamp(38px, 8vw, 68px);
+    line-height: 1.1;
+    margin: 16px 0;
+}
+
+.hero h1 span {
+    color: var(--gold);
+}
+
+.hero p {
+    color: #c5c5c5;
+    max-width: 480px;
+    font-size: 14px;
+}
+
+.button {
+    display: inline-block;
+    background: var(--gold);
+    color: #090909;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 12px 22px;
+    border-radius: 6px;
+    margin-top: 22px;
+}
+
+.features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 35px;
+    font-size: 12px;
+}
+
+.features b {
+    color: var(--gold);
+}
+
+section {
+    padding: 45px 6%;
+}
+
+.section-tag {
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 3px;
+}
+
+.section-title {
+    font-size: 26px;
+    margin: 5px 0 25px;
+}
+
+.services {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid #373737;
+    border-radius: 10px;
+    padding: 20px;
+    transition: .2s;
+}
+
+.card:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+}
+
+.icon {
+    font-size: 30px;
+}
+
+.card h3 {
+    margin: 10px 0;
+    color: var(--gold);
+}
+
+.card p {
+    color: var(--gray);
+    font-size: 13px;
+}
+
+.products {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.product {
+    background: #111419;
+    border: 1px solid #30343a;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.product .emoji {
+    font-size: 32px;
+}
+
+.product h3 {
+    font-size: 15px;
+    margin-top: 8px;
+}
+
+.price {
+    color: var(--gold);
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.order {
+    background: linear-gradient(120deg, #17140a, #0a0b0d);
+    text-align: center;
+    border-top: 1px solid #3a310e;
+    border-bottom: 1px solid #3a310e;
+}
+
+.order h2 {
+    font-size: 28px;
+}
+
+.order p {
+    color: var(--gray);
+    margin-top: 10px;
+}
+
+footer {
+    padding: 28px 6%;
+    text-align: center;
+    color: var(--gray);
+    font-size: 12px;
+}
+
+footer strong {
+    color: var(--gold);
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 14px 5%;
+    }
+
+    .logo {
+        font-size: 21px;
+    }
+
+    nav a {
+        margin-left: 7px;
+        font-size: 10px;
+    }
+
+    .hero {
+        padding: 48px 6%;
+    }
+
+    section {
+        padding: 35px 5%;
+    }
+
+    .services {
+        grid-template-columns: 1fr;
+    }
+
+    .products {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+
+    .features {
+        gap: 14px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">
+        VOID
+        <span>STORE</span>
+    </div>
+
+    <nav>
+        <a href="#beranda">Home</a>
+        <a href="#layanan">Layanan</a>
+        <a href="#produk">Produk</a>
+    </nav>
+</header>
+
+<main>
+
+<section class="hero" id="beranda">
+    <div class="tag">YOUR TRUSTED PUBG MOBILE PARTNER</div>
+
+    <h1>VOID <span>STORE</span></h1>
+
+    <h3>TOP UP • SEWA AKUN • STOCK AKUN</h3>
+
+    <p>
+        Solusi terbaik untuk semua kebutuhan PUBG Mobile kamu.
+        Temukan layanan top up UC, sewa akun, dan berbagai
+        pilihan akun PUBG Mobile di VOID STORE.
+    </p>
+
+    <a class="button"
+       href="#layanan">
+       LIHAT LAYANAN →
+    </a>
+
+    <div class="features">
+        <div>⚡ <b>Proses Cepat</b><br>1–5 menit*</div>
+        <div>◆ <b>Harga Transparan</b><br>Informasi jelas</div>
+        <div>◉ <b>Customer Service</b><br>Sesuai jam operasional</div>
+    </div>
+</section>
+
+<section id="layanan">
+    <div class="section-tag">LAYANAN KAMI</div>
+
+    <h2 class="section-title">
+        PILIH LAYANAN KAMU
+    </h2>
+
+    <div class="services">
+
+        <div class="card">
+            <div class="icon">🪙</div>
+            <h3>TOP UP UC</h3>
+            <p>
+                Pilihan nominal UC PUBG Mobile
+                dengan informasi harga yang jelas.
+            </p>
+            <a class="button" href="#produk">
+                Lihat Produk →
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="icon">🎮</div>
+            <h3>SEWA AKUN</h3>
+            <p>
+                Pilihan akun dengan berbagai rank,
+                skin, serta durasi sewa.
+            </p>
+            <a class="button" href="#produk">
+                Lihat Akun →
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="icon">👑</div>
+            <h3>STOCK AKUN</h3>
+            <p>
+                Temukan akun dengan beragam skin,
+                rank, dan item menarik.
+            </p>
+            <a class="button" href="#produk">
+                Lihat Stock →
+            </a>
+        </div>
+
+    </div>
+</section>
+
+<section id="produk">
+    <div class="section-tag">KATALOG TOKO</div>
+
+    <h2 class="section-title">
+        PRODUK PILIHAN
+    </h2>
+
+    <div class="products">
+
+        <div class="product">
+            <div class="emoji">🪙</div>
+            <h3>UC 60</h3>
+            <div class="price">Rp 12.000</div>
+        </div>
+
+        <div class="product">
+            <div class="emoji">🪙</div>
+            <h3>UC 325</h3>
+            <div class="price">Rp 60.000</div>
+        </div>
+
+        <div class="product">
+            <div class="emoji">🪙</div>
+            <h3>UC 660</h3>
+            <div class="price">Rp 118.000</div>
+        </div>
+
+        <div class="product">
+            <div class="emoji">🎮</div>
+            <h3>Sewa Akun</h3>
+            <div class="price">Hubungi Admin</div>
+        </div>
+
+        <div class="product">
+            <div class="emoji">👑</div>
+            <h3>Akun Sultan</h3>
+            <div class="price">Cek Ketersediaan</div>
+        </div>
+
+        <div class="product">
+            <div class="emoji">🔥</div>
+            <h3>Akun Full Skin</h3>
+            <div class="price">Cek Ketersediaan</div>
+        </div>
+
+    </div>
+</section>
+
+<section class="order">
+    <div class="section-tag">VOID STORE</div>
+
+    <h2>SIAP UNTUK ORDER?</h2>
+
+    <p>
+        Pilih produk dan hubungi admin
+        untuk informasi harga serta ketersediaan.
+    </p>
+
+    <a class="button"
+       href="https://wa.me/60123456789"
+       target="_blank">
+       HUBUNGI VIA WHATSAPP
+    </a>
+</section>
+
+</main>
+
+<footer>
+    <strong>VOID STORE</strong>
+    <p>TOP UP • SEWA AKUN • STOCK AKUN</p>
+    <p>© 2026 VOID STORE. Toko independen PUBG Mobile.</p>
+</footer>
+
+</body>
+</html>
