@@ -101,39 +101,7 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if request.resource.data.keys().hasAll([
-          'customerName', 'nickname', 'playerId', 'phone',
-          'productId', 'productName', 'price', 'paymentMethodId',
-          'paymentMethodName', 'orderStatus', 'paymentStatus', 'createdAt'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'customerName', 'nickname', 'playerId', 'phone',
-          'productId', 'productName', 'price', 'paymentMethodId',
-          'paymentMethodName', 'orderStatus', 'paymentStatus', 'createdAt'
-        ])
-        && request.resource.data.customerName is string
-        && request.resource.data.customerName.size() >= 1
-        && request.resource.data.customerName.size() <= 80
-        && request.resource.data.nickname is string
-        && request.resource.data.nickname.size() >= 1
-        && request.resource.data.nickname.size() <= 80
-        && request.resource.data.playerId is string
-        && request.resource.data.playerId.matches('^[0-9]{5,30}$')
-        && request.resource.data.phone is string
-        && request.resource.data.phone.size() >= 6
-        && request.resource.data.phone.size() <= 25
-        && request.resource.data.productId is string
-        && exists(/databases/$(database)/documents/products/$(request.resource.data.productId))
-        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.active == true
-        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.price == request.resource.data.price
-        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.name == request.resource.data.productName
-        && request.resource.data.paymentMethodId is string
-        && exists(/databases/$(database)/documents/paymentMethods/$(request.resource.data.paymentMethodId))
-        && get(/databases/$(database)/documents/paymentMethods/$(request.resource.data.paymentMethodId)).data.active == true
-        && get(/databases/$(database)/documents/paymentMethods/$(request.resource.data.paymentMethodId)).data.name == request.resource.data.paymentMethodName
-        && request.resource.data.orderStatus == 'Menunggu diproses'
-        && request.resource.data.paymentStatus == 'Menunggu pembayaran'
-        && request.resource.data.createdAt == request.time;
+      allow create: if false; // Order creation must go through the trusted, rate-limited submitOrder function.
 
       allow read: if activeStaff();
 
