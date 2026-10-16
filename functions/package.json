@@ -7,7 +7,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/validation.test.js test/rate-limit.test.js"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
