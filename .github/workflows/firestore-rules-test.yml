@@ -48,6 +48,8 @@ jobs:
         run: npm audit --prefix functions --audit-level=high
       - name: Run rules tests against local emulator
         run: npm run test:rules
+      - name: Run callable integration tests against local emulators
+        run: npm run test:integration
       - name: Block release-quality CI on critical or high advisories
         if: always()
         run: |
