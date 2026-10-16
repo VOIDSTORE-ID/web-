@@ -6,7 +6,7 @@
 
 ## Automated Rules tests
 
-The latest workflow run is https://github.com/VOIDSTORE-ID/web-/actions/runs/38871297530, running against draft commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. The run completed with **failure by design of the new security gate**: dependency installation and the Firestore Rules emulator test step both succeeded, while `Block release-quality CI on critical or high advisories` failed. This confirms the gate blocks release-quality CI while critical/high dependency advisories remain; it does not mean the Rules tests failed.
+The latest workflow run inspected before the newest workflow fix is https://github.com/VOIDSTORE-ID/web-/actions/runs/38871764550, running against draft commit `1f66a52f2e9b2ffd5acf8fffc4866638585ec627`. Dependency installation succeeded and the audit improved to **20 advisories: 0 critical, 9 high, 11 moderate, 0 low**. The Rules emulator step failed because `firebase-tools@15.34.0` requires Java 21 or newer, while the workflow had not configured Java 21. The security gate also correctly failed due to the 9 high advisories. The workflow was then updated in commit `ba0b9926717cfe9b94c6240fd660aa80cb0cd595` to install Temurin Java 21; the new run must confirm the fix and rerun all tests.
 
 The prior expanded Rules suite reported 15 tests passing and 0 failing in run https://github.com/VOIDSTORE-ID/web-/actions/runs/38869463318. These are Firestore Rules emulator tests only; they do not test checkout or login through a real browser.
 
@@ -16,11 +16,11 @@ The prior expanded Rules suite reported 15 tests passing and 0 failing in run ht
 
 ## Dependency audit — release blocker
 
-The latest inspected CI log reported **33 advisories: 1 critical, 13 high, 19 moderate, 0 low**. The install summary separately reported 32 vulnerabilities; the subsequent JSON audit step reported 33, so the JSON audit count is the more detailed report to track. Affected dependency families include `tar`, `firebase-tools`, `firebase`, `@firebase/firestore`, `@firebase/rules-unit-testing`, `undici`, and proxy-related dependencies.
+The earlier audit reported 33 advisories (1 critical, 13 high, 19 moderate, 0 low). After upgrading `firebase-tools` to `^15.34.0`, run `38871764550` reported **20 advisories: 0 critical, 9 high, 11 moderate, 0 low**. This is an improvement, but 9 high advisories remain. Affected dependency families include `tar`, `firebase-tools`, `firebase`, `@firebase/firestore`, `@firebase/rules-unit-testing`, `undici`, and proxy-related dependencies.
 
 The repository has no committed `package-lock.json`; CI currently uses `npm install`, so dependency resolution is not reproducible. A lockfile should be generated and committed only after dependency versions are reviewed and tests pass. Do not run `npm audit fix --force` blindly: suggested remediations include major-version changes.
 
-A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. Run `38871297530` confirmed it behaves as intended: all 15 Rules emulator tests passed, then the workflow failed because the audit reported 1 critical and 13 high advisories. This is a release-quality guardrail, not a vulnerability fix.
+A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. Run `38871297530` confirmed the gate blocks CI with 1 critical and 13 high advisories after 15 Rules tests passed. After the CLI upgrade, run `38871764550` reduced the audit to 0 critical and 9 high, but the Rules tests did not run successfully because Java 21 was missing. Commit `ba0b9926717cfe9b94c6240fd660aa80cb0cd595` adds Java 21 setup; this fix is pending CI confirmation. The gate is a release-quality guardrail, not a vulnerability fix.
 
 Triage step: `firebase-tools` was upgraded from `^13.35.1` to `^15.34.0` in commit `1f66a52f2e9b2ffd5acf8fffc4866638585ec627`. Public package security data identifies 15.34.0 as the latest release and reports no direct vulnerabilities in that version; this does not establish that its full dependency tree is clean. The resulting CI run must validate compatibility and the remaining audit. Other Firebase SDK / rules-testing advisories have not been changed pending careful compatibility review.
 
