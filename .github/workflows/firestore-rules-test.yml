@@ -1,0 +1,33 @@
+name: Firestore Rules Tests (Isolated Emulator)
+
+on:
+  push:
+    branches:
+      - draft/firebase-voidstore-connection
+    paths:
+      - "firestore.rules"
+      - "package.json"
+      - "package-lock.json"
+      - "tests/**"
+      - ".github/workflows/firestore-rules-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firestore-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout draft branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Run rules tests against local emulator
+        run: npm run test:rules
