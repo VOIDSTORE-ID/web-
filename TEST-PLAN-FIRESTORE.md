@@ -6,32 +6,29 @@
 
 ## Automated Rules tests
 
-Latest completed CI run before expanded malformed-order tests: https://github.com/VOIDSTORE-ID/web-/actions/runs/38868604458 — success, 13 tests passed, 0 failed.
+The latest workflow run at the time of this report is https://github.com/VOIDSTORE-ID/web-/actions/runs/38870215128, running against draft commit `3f085bb3d2716521ffa1ce338e2d07823d370571`. Its log shows the isolated Firestore Emulator test command ran; verify the final run conclusion and test summary in GitHub Actions before treating it as a pass.
 
-The latest commit adds two regression tests (unknown/invalid order fields and mismatched payment metadata). Its CI run is pending: https://github.com/VOIDSTORE-ID/web-/actions/runs/38869463318. Do not claim these added tests pass until that run completes.
+The prior expanded Rules suite reported 15 tests passing and 0 failing in run https://github.com/VOIDSTORE-ID/web-/actions/runs/38869463318. These are Firestore Rules emulator tests only; they do not test checkout or login through a real browser.
 
-- Workflow job: `firestore-rules` — latest completed run succeeded; expanded run pending.
 - Test command: `npm run test:rules` using an isolated Firestore Emulator.
-- Last confirmed result: **13 tests passed, 0 failed**; the two new tests have not yet been confirmed.
-- Test duration: about 3.7 seconds; full CI job took about 2 minutes due to dependency installation and emulator setup.
-- Test project ID: `voidstore-rules-isolated-test`; test data is cleared and recreated per test.
-- The emulator loads the draft `firestore.rules` directly; this does not prove the rules have been deployed or that the live site works end-to-end.
+- The emulator loads draft `firestore.rules` directly; this does not prove rules are deployed or that the live site works end-to-end.
+- Coverage includes public catalog reads, valid anonymous order creation, product/payment mismatch rejection, staff/owner role boundaries, order update restrictions, audit fields, and default-deny behavior.
 
-Covered scenarios in the last confirmed run: public ordered catalog/payment-method reads; valid anonymous order creation; manipulated product price/name rejection; inactive product/payment method rejection; anonymous order-read denial; active staff order reads/progress updates; staff payment-status denial; owner payment-status update; inactive staff denial; staff catalog/role escalation denial; owner product/payment-method edits with audit fields; staff order deletion denial and owner deletion allowed; unlisted collection denial. Two new pending regression tests add unknown-field, invalid customer/player/phone data, and mismatched payment-method metadata cases.
+## Dependency audit — release blocker
 
-## Dependency audit — unresolved blocker
+The latest inspected CI log reported **33 advisories: 1 critical, 13 high, 19 moderate, 0 low**. The install summary separately reported 32 vulnerabilities; the subsequent JSON audit step reported 33, so the JSON audit count is the more detailed report to track. Affected dependency families include `tar`, `firebase-tools`, `firebase`, `@firebase/firestore`, `@firebase/rules-unit-testing`, `undici`, and proxy-related dependencies.
 
-The CI dependency audit completed, but it reported **33 advisories: 1 critical, 13 high, 19 moderate, 0 low**. Notable affected packages include `tar` (critical), `firebase-tools`, `firebase`, `@firebase/firestore`, `@firebase/rules-unit-testing`, `undici`, `basic-ftp`, `braces`, `chokidar`, and proxy-related dependencies.
+The repository has no committed `package-lock.json`; CI currently uses `npm install`, so dependency resolution is not reproducible. A lockfile should be generated and committed only after dependency versions are reviewed and tests pass. Do not run `npm audit fix --force` blindly: suggested remediations include major-version changes.
 
-The repository currently has no committed `package-lock.json`; CI installs from the package ranges, so dependency resolution is not yet reproducible. Generate and commit a lockfile on the draft branch, then test using `npm ci`. The package list is currently used for draft testing; the storefront imports Firebase Web SDK 10.14.1 from Google's CDN. This does not automatically mean every npm finding is exploitable in the deployed browser app, but the critical/high findings must be triaged and resolved safely before release. The suggested fixes in the audit include major-version changes, so **do not run `npm audit fix --force` blindly**. Pin compatible versions, generate a lockfile, and rerun the isolated tests and audit.
+A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. It allows the Rules emulator tests to run, then fails the workflow if critical or high advisories remain. This is a release-quality guardrail, not a vulnerability fix. The next workflow run must be checked to confirm the gate behaves as intended.
 
 ## Known release gaps
 
-1. Dependency vulnerabilities are unresolved; draft is **not release-ready**.
-2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test. Draft checkout code was updated in commit `5e7bdbe9f97ef1b0cce57ee5e1bc3205d71ea449` to open a temporary tab synchronously during the submit gesture, navigate to WhatsApp only after the order write succeeds, close the temporary tab on write failure, and provide a fallback WhatsApp link if the popup is blocked. This is a code-level mitigation, not proof of browser behavior; verify in a real browser before release.
-3. Production Firebase Rules remain deny-all; the Firebase-integrated draft will not work against production until a separately reviewed and approved Rules release.
-4. Anonymous order creation has no rate limiting. Evaluate App Check and/or trusted server-side abuse controls before opening public order writes.
-5. Branch comparison against `main` is divergent (draft 18 commits ahead, 1 behind at the last comparison); inspect and reconcile in draft before any release.
+1. Dependency vulnerabilities remain unresolved; draft is **not release-ready**.
+2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test. Checkout code was updated in commit `5e7bdbe9f97ef1b0cce57ee5e1bc3205d71ea449` to mitigate popup blocking and avoid opening WhatsApp before the order write succeeds. This is a code-level mitigation, not proof of browser behavior.
+3. Production Firebase Rules remain deny-all. The Firebase-integrated draft will not work against production until a separately reviewed and approved Rules release.
+4. Anonymous order creation has no rate limiting. Evaluate App Check and/or trusted server-side abuse controls before enabling public order writes.
+5. Branch comparison against `main` was previously reported as divergent (draft 18 commits ahead, 1 behind); recheck and reconcile in draft before any release.
 6. Confirm public Firebase config, WhatsApp number, owner account/profile, and live Firestore document shapes using safe checks before release.
 
 ## Security expectations
@@ -44,4 +41,4 @@ The repository currently has no committed `package-lock.json`; CI installs from 
 
 ## Release boundary
 
-Do not publish Firebase Rules, merge to `main`, or deploy until dependency findings are addressed, browser end-to-end checks are completed in a safe test environment, final regression tests pass, and the user explicitly approves the production release.
+Do not publish Firebase Rules, merge to `main`, or deploy until dependency findings are triaged and resolved, browser end-to-end checks are completed in a safe test environment, final regression tests pass, and the user explicitly approves the production release.
