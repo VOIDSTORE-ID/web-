@@ -173,3 +173,16 @@ test("order rejects mismatched payment method metadata", async () => {
   const db = env.unauthenticatedContext().firestore();
   await assertFails(setDoc(doc(db, "orders/badPaymentName"), validOrder({ paymentMethodName: "Fake payment" })));
 });
+
+
+// Characterization test: Firestore Rules alone do not rate-limit anonymous order creation.
+// This intentionally documents the current spam-abuse gap; it is not proof of spam protection.
+// Replace with rejection assertions once a trusted rate-limiting backend is implemented.
+test("documents that repeated anonymous orders are currently accepted (rate-limit gap)", async () => {
+  const db = env.unauthenticatedContext().firestore();
+  const attempts = Array.from({ length: 10 }, (_, i) =>
+    setDoc(doc(db, `orders/repeatOrder${i}`), validOrder())
+  );
+  const results = await Promise.allSettled(attempts);
+  assert.equal(results.filter(result => result.status === "fulfilled").length, 10);
+});
