@@ -24,3 +24,15 @@ test("resets the counter when the next window begins", () => {
   assert.equal(state.count, 0);
   assert.equal(state.nextCount, 1);
 });
+
+
+test("recovers safely from malformed stored counters", () => {
+  const now = 1_800_000_000_000;
+  const windowStartMs = Math.floor(now / WINDOW_MS) * WINDOW_MS;
+  for (const count of [NaN, Infinity, -1, "5", 1.5]) {
+    const state = getRateLimitState({ windowStartMs, count }, now);
+    assert.equal(state.allowed, true);
+    assert.equal(state.count, 0);
+    assert.equal(state.nextCount, 1);
+  }
+});
