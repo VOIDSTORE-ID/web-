@@ -22,3 +22,9 @@ test("trims customer fields and rejects blank names", () => {
   assert.equal(validatePayload({ ...good, customerName: "  Customer  " }).customerName, "Customer");
   assert.throws(() => validatePayload({ ...good, customerName: " " }), /customerName/);
 });
+
+test("rejects client-supplied price, status, and timestamp metadata", () => {
+  assert.throws(() => validatePayload({ ...good, price: 1 }), /unsupported/);
+  assert.throws(() => validatePayload({ ...good, orderStatus: "Selesai" }), /unsupported/);
+  assert.throws(() => validatePayload({ ...good, createdAt: "forged" }), /unsupported/);
+});
