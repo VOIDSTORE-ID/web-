@@ -244,6 +244,8 @@ footer strong {
         grid-template-columns: 1fr;
     }
 
+    .catalog-tools { grid-template-columns: 1fr; }
+
     .products {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -256,6 +258,21 @@ footer strong {
         gap: 14px;
     }
 }
+.catalog-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 220px);
+    gap: 8px 12px;
+    align-items: center;
+    margin: 0 0 18px;
+    max-width: 620px;
+}
+.catalog-tools label, .catalog-result-count { color: var(--gray); font-size: 12px; }
+.catalog-tools input, .catalog-tools select {
+    width: 100%; min-width: 0; border: 1px solid #373737; border-radius: 6px;
+    background: #101317; color: var(--white); padding: 11px 12px; font: inherit;
+}
+.catalog-tools input:focus, .catalog-tools select:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+.catalog-result-count { grid-column: 1 / -1; }
 </style>
 </head>
 
@@ -356,6 +373,19 @@ footer strong {
         PRODUK PILIHAN
     </h2>
 
+    <div class="catalog-tools" aria-label="Pencarian dan pengurutan UC">
+        <label for="ucSearch">Cari paket UC</label>
+        <input id="ucSearch" type="search" placeholder="Contoh: 325 UC" autocomplete="off">
+        <label for="ucSort">Urutkan paket UC</label>
+        <select id="ucSort">
+            <option value="default">Urutan awal</option>
+            <option value="price-asc">Harga terendah</option>
+            <option value="price-desc">Harga tertinggi</option>
+            <option value="uc-asc">Jumlah UC</option>
+        </select>
+        <p id="ucResultCount" class="catalog-result-count" aria-live="polite">3 paket UC</p>
+    </div>
+
     <div class="products">
 
         <div class="product">
@@ -421,6 +451,32 @@ footer strong {
     <p>TOP UP • SEWA AKUN • STOCK AKUN</p>
     <p>© 2026 VOID STORE. Toko independen PUBG Mobile.</p>
 </footer>
+
+<script>
+(() => {
+ const grid=document.querySelector("#produk .products"), search=document.getElementById("ucSearch"), sort=document.getElementById("ucSort"), count=document.getElementById("ucResultCount");
+ if(!grid||!search||!sort||!count)return;
+ const cards=Array.from(grid.querySelectorAll(".product"));
+ const ucCards=cards.filter(card=>/^UC\s+\d+/i.test(card.querySelector("h3")?.textContent.trim()||""));
+ const otherCards=cards.filter(card=>!ucCards.includes(card));
+ const data=ucCards.map(card=>({card,title:card.querySelector("h3").textContent.trim(),uc:Number((card.querySelector("h3").textContent.match(/\d+/)||[0])[0]),price:Number((card.querySelector(".price")?.textContent||"").replace(/[^\d]/g,""))||0}));
+ function render(){
+  const term=search.value.trim().toLowerCase(), mode=sort.value;
+  const visible=data.filter(x=>x.title.toLowerCase().includes(term)||(x.uc+" uc").includes(term));
+  if(mode==="price-asc")visible.sort((a,b)=>a.price-b.price);
+  if(mode==="price-desc")visible.sort((a,b)=>b.price-a.price);
+  if(mode==="uc-asc")visible.sort((a,b)=>a.uc-b.uc);
+  const set=new Set(visible.map(x=>x.card));
+  data.forEach(x=>x.card.hidden=!set.has(x.card));
+  visible.forEach(x=>grid.appendChild(x.card)); otherCards.forEach(x=>grid.appendChild(x));
+  count.textContent=visible.length+" dari "+data.length+" paket UC";
+  let empty=document.getElementById("ucNoResults");
+  if(!empty){empty=document.createElement("p");empty.id="ucNoResults";empty.className="catalog-result-count";empty.setAttribute("role","status");grid.insertAdjacentElement("afterend",empty);}
+  empty.textContent=visible.length?"":"Paket UC tidak ditemukan. Coba kata kunci lain.";empty.hidden=visible.length>0;
+ }
+ search.addEventListener("input",render);sort.addEventListener("change",render);render();
+})();
+</script>
 
 </body>
 </html>
