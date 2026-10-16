@@ -21,15 +21,15 @@ Covered scenarios: public ordered catalog/payment-method reads; valid anonymous 
 
 The CI dependency audit completed, but it reported **33 advisories: 1 critical, 13 high, 19 moderate, 0 low**. Notable affected packages include `tar` (critical), `firebase-tools`, `firebase`, `@firebase/firestore`, `@firebase/rules-unit-testing`, `undici`, `basic-ftp`, `braces`, `chokidar`, and proxy-related dependencies.
 
-The package list is currently used for draft testing; the storefront imports Firebase Web SDK 10.14.1 from Google's CDN. This does not automatically mean every npm finding is exploitable in the deployed browser app, but the critical/high findings must be triaged and resolved safely before release. The suggested fixes in the audit include major-version changes, so **do not run `npm audit fix --force` blindly**. Pin compatible versions, generate a lockfile, and rerun the isolated tests and audit.
+The repository currently has no committed `package-lock.json`; CI installs from the package ranges, so dependency resolution is not yet reproducible. Generate and commit a lockfile on the draft branch, then test using `npm ci`. The package list is currently used for draft testing; the storefront imports Firebase Web SDK 10.14.1 from Google's CDN. This does not automatically mean every npm finding is exploitable in the deployed browser app, but the critical/high findings must be triaged and resolved safely before release. The suggested fixes in the audit include major-version changes, so **do not run `npm audit fix --force` blindly**. Pin compatible versions, generate a lockfile, and rerun the isolated tests and audit.
 
 ## Known release gaps
 
 1. Dependency vulnerabilities are unresolved; draft is **not release-ready**.
-2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test.
+2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test. Code review identified a likely browser compatibility risk: checkout calls `window.open()` only after awaiting the Firestore write, which some browsers may treat as a popup and block. Verify in browser and consider opening a blank tab synchronously from the submit gesture, then navigating it after the order succeeds (and closing it on failure).
 3. Production Firebase Rules remain deny-all; the Firebase-integrated draft will not work against production until a separately reviewed and approved Rules release.
 4. Anonymous order creation has no rate limiting. Evaluate App Check and/or trusted server-side abuse controls before opening public order writes.
-5. Branch comparison against `main` is divergent (draft 16 commits ahead, 1 behind at this snapshot); inspect and reconcile in draft before any release.
+5. Branch comparison against `main` is divergent (draft 17 commits ahead, 1 behind at this snapshot); inspect and reconcile in draft before any release.
 6. Confirm public Firebase config, WhatsApp number, owner account/profile, and live Firestore document shapes using safe checks before release.
 
 ## Security expectations
