@@ -35,3 +35,22 @@ jobs:
           node -e 'const a=require("./npm-audit.json"); const v=a.metadata?.vulnerabilities||{}; console.log("Dependency audit: "+(v.total||0)+" total; "+(v.critical||0)+" critical, "+(v.high||0)+" high, "+(v.moderate||0)+" moderate, "+(v.low||0)+" low"); for (const [name,item] of Object.entries(a.vulnerabilities||{})) console.log(item.severity+": "+name+" (fixAvailable="+JSON.stringify(item.fixAvailable)+")");'
       - name: Run rules tests against local emulator
         run: npm run test:rules
+      - name: Block release-quality CI on critical or high advisories
+        if: always()
+        run: |
+          if [ ! -f npm-audit.json ]; then
+            echo "::error::Dependency audit output is missing; security gate cannot pass."
+            exit 1
+          fi
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const audit = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
+            const counts = audit.metadata?.vulnerabilities ?? {};
+            const critical = counts.critical ?? 0;
+            const high = counts.high ?? 0;
+            console.log("Security gate: " + critical + " critical, " + high + " high advisories.");
+            if (critical > 0 || high > 0) {
+              console.error("Security gate failed. Triage and resolve critical/high dependency advisories before release.");
+              process.exit(1);
+            }
+          '
