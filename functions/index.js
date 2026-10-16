@@ -3,12 +3,11 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { validatePayload } from "./validation.js";
+import { getRateLimitState } from "./rate-limit.js";
 
 initializeApp();
 const db = getFirestore();
 
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_ORDERS_PER_WINDOW = 5;
 const ALLOWED_FIELDS = [
   "customerName", "nickname", "playerId", "phone",
   "productId", "productName", "price", "paymentMethodId",
@@ -43,10 +42,8 @@ export const submitOrder = onCall(
         tx.get(rateRef), tx.get(productRef), tx.get(methodRef)
       ]);
 
-      const rateData = rateSnap.exists ? rateSnap.data() : {};
-      const sameWindow = rateData.windowStartMs === windowStart;
-      const count = sameWindow ? Number(rateData.count || 0) : 0;
-      if (count >= MAX_ORDERS_PER_WINDOW) {
+      const rateState = getRateLimitState(rateSnap.exists ? rateSnap.data() : {}, nowMs);
+      if (!rateState.allowed) {
         throw new HttpsError("resource-exhausted", "Terlalu banyak pesanan dari jaringan ini. Coba lagi beberapa menit.");
       }
       if (!productSnap.exists || productSnap.data().active !== true) {
@@ -65,9 +62,9 @@ export const submitOrder = onCall(
       }
 
       tx.set(rateRef, {
-        windowStartMs: windowStart,
-        count: count + 1,
-        resetAt,
+        windowStartMs: rateState.windowStartMs,
+        count: rateState.nextCount,
+        resetAt: Timestamp.fromMillis(rateState.resetAtMs),
         updatedAt: FieldValue.serverTimestamp()
       });
       tx.create(orderRef, {
