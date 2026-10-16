@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { validatePayload } from "./validation.js";
 import { getRateLimitState } from "./rate-limit.js";
@@ -8,11 +8,6 @@ import { getRateLimitState } from "./rate-limit.js";
 initializeApp();
 const db = getFirestore();
 
-const ALLOWED_FIELDS = [
-  "customerName", "nickname", "playerId", "phone",
-  "productId", "productName", "price", "paymentMethodId",
-  "paymentMethodName", "orderStatus", "paymentStatus", "createdAt"
-];
 
 function ipKey(ip) {
   return createHash("sha256").update(ip).digest("hex");
@@ -29,8 +24,6 @@ export const submitOrder = onCall(
     }
 
     const nowMs = Date.now();
-    const windowStart = Math.floor(nowMs / WINDOW_MS) * WINDOW_MS;
-    const resetAt = Timestamp.fromMillis(windowStart + WINDOW_MS);
     const key = ipKey(ip.trim());
     const rateRef = db.collection("_orderRateLimits").doc(key);
     const orderRef = db.collection("orders").doc();
