@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function hasProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function activeStaff() {
+      return hasProfile()
+        && profile().active == true
+        && profile().role in ['owner', 'staff'];
+    }
+    function owner() {
+      return activeStaff() && profile().role == 'owner';
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, delete: if owner();
+      allow update: if owner()
+        && request.resource.data.name is string
+        && request.resource.data.price is int
+        && request.resource.data.price >= 0
+        && request.resource.data.active is bool
+        && request.resource.data.sortOrder is int;
+    }
+
+    match /paymentMethods/{methodId} {
+      allow read: if resource.data.active == true || activeStaff();
+      allow create, delete: if owner();
+      allow update: if owner()
+        && request.resource.data.name is string
+        && request.resource.data.active is bool
+        && request.resource.data.sortOrder is int;
+    }
+
+    match /orders/{orderId} {
+      allow create: if request.resource.data.keys().hasAll([
+          'customerName', 'nickname', 'playerId', 'phone',
+          'productId', 'productName', 'price', 'paymentMethodId',
+          'paymentMethodName', 'orderStatus', 'paymentStatus', 'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'customerName', 'nickname', 'playerId', 'phone',
+          'productId', 'productName', 'price', 'paymentMethodId',
+          'paymentMethodName', 'orderStatus', 'paymentStatus', 'createdAt'
+        ])
+        && request.resource.data.customerName is string
+        && request.resource.data.customerName.size() >= 1
+        && request.resource.data.customerName.size() <= 80
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() >= 1
+        && request.resource.data.nickname.size() <= 80
+        && request.resource.data.playerId is string
+        && request.resource.data.playerId.matches('^[0-9]{5,30}$')
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 6
+        && request.resource.data.phone.size() <= 25
+        && request.resource.data.productId is string
+        && exists(/databases/$(database)/documents/products/$(request.resource.data.productId))
+        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.active == true
+        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.price == request.resource.data.price
+        && get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.name == request.resource.data.productName
+        && request.resource.data.paymentMethodId is string
+        && exists(/databases/$(database)/documents/paymentMethods/$(request.resource.data.paymentMethodId))
+        && get(/databases/$(database)/documents/paymentMethods/$(request.resource.data.paymentMethodId)).data.active == true
+        && get(/databases/$(database)/documents/paymentMethods/$(request.resource.data.paymentMethodId)).data.name == request.resource.data.paymentMethodName
+        && request.resource.data.orderStatus == 'Menunggu diproses'
+        && request.resource.data.paymentStatus == 'Menunggu pembayaran'
+        && request.resource.data.createdAt == request.time;
+      allow read: if activeStaff();
+      allow update: if activeStaff()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'orderStatus', 'paymentStatus', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.orderStatus in [
+          'Menunggu diproses', 'Diproses', 'Selesai', 'Dibatalkan'
+        ]
+        && request.resource.data.paymentStatus in [
+          'Menunggu pembayaran', 'Dibayar', 'Dibatalkan'
+        ]
+        && request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if owner();
+    }
+
+    match /users/{userId} {
+      allow read: if (signedIn() && request.auth.uid == userId) || owner();
+      // Create user role profiles manually in Console or through a trusted server.
+      allow create, delete: if owner();
+      allow update: if owner()
+        && request.resource.data.role in ['owner', 'staff']
+        && request.resource.data.active is bool;
+    }
+  }
+}
