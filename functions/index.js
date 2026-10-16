@@ -79,6 +79,11 @@ export const submitOrder = onCall(
       });
     });
 
-    return { orderId: orderRef.id };
+    return {
+      orderId: orderRef.id,
+      productName: productSnap.data().name,
+      price: productSnap.data().price,
+      paymentMethodName: methodSnap.data().name
+    };
   }
 );
