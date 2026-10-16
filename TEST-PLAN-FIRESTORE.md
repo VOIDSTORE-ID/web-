@@ -20,7 +20,9 @@ The latest inspected CI log reported **33 advisories: 1 critical, 13 high, 19 mo
 
 The repository has no committed `package-lock.json`; CI currently uses `npm install`, so dependency resolution is not reproducible. A lockfile should be generated and committed only after dependency versions are reviewed and tests pass. Do not run `npm audit fix --force` blindly: suggested remediations include major-version changes.
 
-A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. Run `38871297530` confirmed it behaves as intended: the Rules emulator tests passed, then the workflow failed because critical/high advisories remain. This is a release-quality guardrail, not a vulnerability fix.
+A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. Run `38871297530` confirmed it behaves as intended: all 15 Rules emulator tests passed, then the workflow failed because the audit reported 1 critical and 13 high advisories. This is a release-quality guardrail, not a vulnerability fix.
+
+Triage step: `firebase-tools` was upgraded from `^13.35.1` to `^15.34.0` in commit `1f66a52f2e9b2ffd5acf8fffc4866638585ec627`. Public package security data identifies 15.34.0 as the latest release and reports no direct vulnerabilities in that version; this does not establish that its full dependency tree is clean. The resulting CI run must validate compatibility and the remaining audit. Other Firebase SDK / rules-testing advisories have not been changed pending careful compatibility review.
 
 ## Known release gaps
 
