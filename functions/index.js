@@ -18,7 +18,10 @@ export const submitOrder = onCall(
   async (request) => {
     const data = request.data;
     const payload = validatePayload(data);
-    const ip = request.rawRequest.ip;
+    // The Functions Emulator may omit req.ip in local callable requests. Use a
+    // deterministic loopback identity only in emulator mode; production fails closed.
+    const ip = request.rawRequest.ip ||
+      (process.env.FUNCTIONS_EMULATOR === "true" ? "127.0.0.1" : null);
     if (typeof ip !== "string" || !ip.trim()) {
       throw new HttpsError("resource-exhausted", "Cannot validate request source. Try again later.");
     }
