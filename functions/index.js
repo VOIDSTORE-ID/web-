@@ -33,7 +33,7 @@ export const submitOrder = onCall(
     const productRef = db.collection("products").doc(payload.productId);
     const methodRef = db.collection("paymentMethods").doc(payload.paymentMethodId);
 
-    await db.runTransaction(async (tx) => {
+    const orderSummary = await db.runTransaction(async (tx) => {
       const [rateSnap, productSnap, methodSnap] = await Promise.all([
         tx.get(rateRef), tx.get(productRef), tx.get(methodRef)
       ]);
@@ -77,13 +77,14 @@ export const submitOrder = onCall(
         paymentStatus: "Menunggu pembayaran",
         createdAt: FieldValue.serverTimestamp()
       });
+
+      return {
+        productName: product.name,
+        price: product.price,
+        paymentMethodName: method.name
+      };
     });
 
-    return {
-      orderId: orderRef.id,
-      productName: productSnap.data().name,
-      price: productSnap.data().price,
-      paymentMethodName: methodSnap.data().name
-    };
+    return { orderId: orderRef.id, ...orderSummary };
   }
 );
