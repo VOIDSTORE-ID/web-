@@ -26,13 +26,13 @@ test("resets the counter when the next window begins", () => {
 });
 
 
-test("recovers safely from malformed stored counters", () => {
+test("fails closed when stored counters are malformed in the active window", () => {
   const now = 1_800_000_000_000;
   const windowStartMs = Math.floor(now / WINDOW_MS) * WINDOW_MS;
   for (const count of [NaN, Infinity, -1, "5", 1.5]) {
     const state = getRateLimitState({ windowStartMs, count }, now);
-    assert.equal(state.allowed, true);
-    assert.equal(state.count, 0);
-    assert.equal(state.nextCount, 1);
+    assert.equal(state.allowed, false);
+    assert.equal(state.count, MAX_ORDERS_PER_WINDOW);
+    assert.equal(state.nextCount, MAX_ORDERS_PER_WINDOW + 1);
   }
 });
