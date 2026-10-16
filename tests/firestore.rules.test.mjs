@@ -144,3 +144,17 @@ test("unlisted collections are denied", async () => {
   await assertFails(getDoc(doc(db, "privateSecrets/secret1")));
   await assertFails(setDoc(doc(db, "privateSecrets/secret2"), { value: "nope" }));
 });
+
+test("order rejects unknown fields and invalid customer data", async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, "orders/unknownField"), validOrder({ admin: true })));
+  await assertFails(setDoc(doc(db, "orders/emptyName"), validOrder({ customerName: "" })));
+  await assertFails(setDoc(doc(db, "orders/longName"), validOrder({ customerName: "x".repeat(81) })));
+  await assertFails(setDoc(doc(db, "orders/badPlayerId"), validOrder({ playerId: "1234" })));
+  await assertFails(setDoc(doc(db, "orders/badPhone"), validOrder({ phone: "x" })));
+});
+
+test("order rejects mismatched payment method metadata", async () => {
+  const db = env.unauthenticatedContext().firestore();
+  await assertFails(setDoc(doc(db, "orders/badPaymentName"), validOrder({ paymentMethodName: "Fake payment" })));
+});
