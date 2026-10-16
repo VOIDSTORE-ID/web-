@@ -17,8 +17,7 @@ export function validatePayload(data) {
   }
   const allowed = [
     "customerName", "nickname", "playerId", "phone",
-    "productId", "productName", "price", "paymentMethodId",
-    "paymentMethodName", "orderStatus", "paymentStatus", "createdAt"
+    "productId", "paymentMethodId"
   ];
   if (Object.keys(data).some((key) => !allowed.includes(key))) {
     throw new HttpsError("invalid-argument", "Order contains unsupported fields.");
