@@ -10,6 +10,7 @@ on:
       - "package-lock.json"
       - "tests/**"
       - ".github/workflows/firestore-rules-test.yml"
+      - "index.html"
   workflow_dispatch:
 
 permissions:
