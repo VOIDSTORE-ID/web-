@@ -6,7 +6,9 @@
 
 ## Automated Rules tests
 
-Latest completed CI run: https://github.com/VOIDSTORE-ID/web-/actions/runs/38865540874
+Latest previously completed CI run: https://github.com/VOIDSTORE-ID/web-/actions/runs/38865540874
+
+A new CI run triggered by the checkout change is in progress: https://github.com/VOIDSTORE-ID/web-/actions/runs/38868604458. Do not treat it as passed until GitHub reports a completed successful result.
 
 - Workflow job: `firestore-rules` — completed successfully.
 - Test command: `npm run test:rules` using an isolated Firestore Emulator.
@@ -26,10 +28,10 @@ The repository currently has no committed `package-lock.json`; CI installs from 
 ## Known release gaps
 
 1. Dependency vulnerabilities are unresolved; draft is **not release-ready**.
-2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test. Code review identified a likely browser compatibility risk: checkout calls `window.open()` only after awaiting the Firestore write, which some browsers may treat as a popup and block. Verify in browser and consider opening a blank tab synchronously from the submit gesture, then navigating it after the order succeeds (and closing it on failure).
+2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test. Draft checkout code was updated in commit `5e7bdbe9f97ef1b0cce57ee5e1bc3205d71ea449` to open a temporary tab synchronously during the submit gesture, navigate to WhatsApp only after the order write succeeds, close the temporary tab on write failure, and provide a fallback WhatsApp link if the popup is blocked. This is a code-level mitigation, not proof of browser behavior; verify in a real browser before release.
 3. Production Firebase Rules remain deny-all; the Firebase-integrated draft will not work against production until a separately reviewed and approved Rules release.
 4. Anonymous order creation has no rate limiting. Evaluate App Check and/or trusted server-side abuse controls before opening public order writes.
-5. Branch comparison against `main` is divergent (draft 17 commits ahead, 1 behind at this snapshot); inspect and reconcile in draft before any release.
+5. Branch comparison against `main` is divergent (draft 18 commits ahead, 1 behind at the last comparison); inspect and reconcile in draft before any release.
 6. Confirm public Firebase config, WhatsApp number, owner account/profile, and live Firestore document shapes using safe checks before release.
 
 ## Security expectations
