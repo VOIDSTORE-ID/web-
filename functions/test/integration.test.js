@@ -51,6 +51,9 @@ try {
 
   const first = await call(payload);
   assert.ok(first.result?.orderId, "valid request should return an order ID");
+  assert.equal(first.result.productName, "Integration Package");
+  assert.equal(first.result.price, 12345);
+  assert.equal(first.result.paymentMethodName, "Integration Payment");
   const saved = await db.collection("orders").doc(first.result.orderId).get();
   assert.equal(saved.exists, true);
   assert.equal(saved.data().price, 12345, "server must use catalog price");
