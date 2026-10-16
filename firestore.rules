@@ -4,40 +4,100 @@ service cloud.firestore {
     function signedIn() {
       return request.auth != null;
     }
+
     function hasProfile() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid));
     }
+
     function profile() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+
     function activeStaff() {
       return hasProfile()
         && profile().active == true
         && profile().role in ['owner', 'staff'];
     }
+
     function owner() {
       return activeStaff() && profile().role == 'owner';
     }
 
+    function validAuditFields() {
+      return request.resource.data.updatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+    }
+
     match /products/{productId} {
+      // Product catalog is public; only active status is not used to hide products here.
       allow read: if true;
-      allow create, delete: if owner();
-      allow update: if owner()
+
+      allow create: if owner()
+        && request.resource.data.keys().hasAll(['name', 'price', 'active', 'sortOrder'])
+        && request.resource.data.keys().hasOnly([
+          'name', 'price', 'active', 'sortOrder', 'updatedAt', 'updatedBy'
+        ])
         && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
         && request.resource.data.price is int
         && request.resource.data.price >= 0
         && request.resource.data.active is bool
         && request.resource.data.sortOrder is int;
+
+      allow update: if owner()
+        && request.resource.data.keys().hasAll(['name', 'price', 'active', 'sortOrder'])
+        && request.resource.data.keys().hasOnly([
+          'name', 'price', 'active', 'sortOrder', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.price is int
+        && request.resource.data.price >= 0
+        && request.resource.data.active is bool
+        && request.resource.data.sortOrder is int
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'price', 'active', 'sortOrder', 'updatedAt', 'updatedBy'
+        ])
+        && validAuditFields();
+
+      allow delete: if owner();
     }
 
     match /paymentMethods/{methodId} {
-      allow read: if resource.data.active == true || activeStaff();
-      allow create, delete: if owner();
-      allow update: if owner()
+      // Only non-sensitive method metadata is stored here. The public site filters active methods.
+      // This allows the existing ordered query to load; do not store secrets in this collection.
+      allow read: if true;
+
+      allow create: if owner()
+        && request.resource.data.keys().hasAll(['name', 'active', 'sortOrder'])
+        && request.resource.data.keys().hasOnly([
+          'name', 'active', 'sortOrder', 'updatedAt', 'updatedBy'
+        ])
         && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 50
         && request.resource.data.active is bool
         && request.resource.data.sortOrder is int;
+
+      allow update: if owner()
+        && request.resource.data.keys().hasAll(['name', 'active', 'sortOrder'])
+        && request.resource.data.keys().hasOnly([
+          'name', 'active', 'sortOrder', 'updatedAt', 'updatedBy'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 50
+        && request.resource.data.active is bool
+        && request.resource.data.sortOrder is int
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'active', 'sortOrder', 'updatedAt', 'updatedBy'
+        ])
+        && validAuditFields();
+
+      allow delete: if owner();
     }
 
     match /orders/{orderId} {
@@ -74,7 +134,10 @@ service cloud.firestore {
         && request.resource.data.orderStatus == 'Menunggu diproses'
         && request.resource.data.paymentStatus == 'Menunggu pembayaran'
         && request.resource.data.createdAt == request.time;
+
       allow read: if activeStaff();
+
+      // Staff may change order progress, but only the owner may change paymentStatus.
       allow update: if activeStaff()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'orderStatus', 'paymentStatus', 'updatedAt', 'updatedBy'
@@ -85,18 +148,39 @@ service cloud.firestore {
         && request.resource.data.paymentStatus in [
           'Menunggu pembayaran', 'Dibayar', 'Dibatalkan'
         ]
-        && request.resource.data.updatedBy == request.auth.uid
-        && request.resource.data.updatedAt == request.time;
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentStatus'])
+          || owner()
+        )
+        && validAuditFields();
+
       allow delete: if owner();
     }
 
     match /users/{userId} {
       allow read: if (signedIn() && request.auth.uid == userId) || owner();
-      // Create user role profiles manually in Console or through a trusted server.
-      allow create, delete: if owner();
-      allow update: if owner()
+
+      // User profiles should be provisioned manually in Console or by a trusted server.
+      allow create: if owner()
+        && request.resource.data.keys().hasAll(['role', 'active'])
+        && request.resource.data.keys().hasOnly([
+          'email', 'displayName', 'role', 'active'
+        ])
         && request.resource.data.role in ['owner', 'staff']
         && request.resource.data.active is bool;
+
+      allow update: if owner()
+        && request.resource.data.keys().hasAll(['role', 'active'])
+        && request.resource.data.keys().hasOnly([
+          'email', 'displayName', 'role', 'active'
+        ])
+        && request.resource.data.role in ['owner', 'staff']
+        && request.resource.data.active is bool
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'email', 'displayName', 'role', 'active'
+        ]);
+
+      allow delete: if owner();
     }
   }
 }
