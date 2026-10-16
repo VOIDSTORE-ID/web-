@@ -3,7 +3,7 @@
 This branch routes new orders through the Firebase callable function `submitOrder` rather than allowing browser clients to write to `orders` directly.
 
 ## Current draft behavior
-- Callable endpoint is deployed to region `asia-southeast2`.
+- Callable endpoint is configured for region `asia-southeast2`, but it has **not been deployed**.
 - The server re-reads the selected product and payment method and uses current catalog values for the order price/name.
 - Order payload fields and Player ID format are validated on the server.
 - A Firestore transaction permits at most 5 successful order submissions per source IP per fixed 10-minute window.
