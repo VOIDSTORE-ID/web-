@@ -11,6 +11,8 @@ on:
       - "tests/**"
       - ".github/workflows/firestore-rules-test.yml"
       - "index.html"
+      - "functions/**"
+      - "firebase.json"
   workflow_dispatch:
 
 permissions:
@@ -38,6 +40,12 @@ jobs:
         run: |
           npm audit --json > npm-audit.json || true
           node -e 'const a=require("./npm-audit.json"); const v=a.metadata?.vulnerabilities||{}; console.log("Dependency audit: "+(v.total||0)+" total; "+(v.critical||0)+" critical, "+(v.high||0)+" high, "+(v.moderate||0)+" moderate, "+(v.low||0)+" low"); for (const [name,item] of Object.entries(a.vulnerabilities||{})) { console.log(item.severity+": "+name+" (range="+JSON.stringify(item.range)+", fixAvailable="+JSON.stringify(item.fixAvailable)+")"); for (const via of item.via||[]) if (typeof via==="object") console.log("  advisory: "+via.title+" | "+via.url+" | range="+via.range); }'
+      - name: Install backend function dependencies
+        run: npm install --prefix functions
+      - name: Run backend validation tests
+        run: npm test --prefix functions
+      - name: Audit backend dependencies
+        run: npm audit --prefix functions --audit-level=high
       - name: Run rules tests against local emulator
         run: npm run test:rules
       - name: Block release-quality CI on critical or high advisories
