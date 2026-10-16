@@ -28,6 +28,11 @@ async function call(data) {
 }
 
 try {
+  const rateLimits = await db.collection("_orderRateLimits").get();
+  await Promise.all(rateLimits.docs.map(doc => doc.ref.delete()));
+  const existingOrders = await db.collection("orders").get();
+  await Promise.all(existingOrders.docs.map(doc => doc.ref.delete()));
+
   await db.collection("products").doc(payload.productId).set({
     name: "Integration Package", price: 12345, active: true, sortOrder: 1
   });
@@ -38,11 +43,11 @@ try {
     name: "Inactive Package", price: 999, active: false, sortOrder: 2
   });
 
-  const forged = await call({ ...payload, price: 1, orderStatus: "Selesai" });
-  assert.equal(forged.error?.status, "INVALID_ARGUMENT", "forged server-owned fields must be rejected");
-
   const inactive = await call({ ...payload, productId: "integration_inactive" });
   assert.equal(inactive.error?.status, "FAILED_PRECONDITION", "inactive products must be rejected");
+
+  const forged = await call({ ...payload, price: 1, orderStatus: "Selesai" });
+  assert.equal(forged.error?.status, "INVALID_ARGUMENT", "forged server-owned fields must be rejected");
 
   const first = await call(payload);
   assert.ok(first.result?.orderId, "valid request should return an order ID");
