@@ -91,6 +91,21 @@ test("active staff can read orders and update order progress", async () => {
   }));
 });
 
+test("order updates reject invalid status values and protected fields", async () => {
+  const staffDb = env.authenticatedContext("staffA").firestore();
+  await assertFails(updateDoc(doc(staffDb, "orders/order1"), {
+    orderStatus: "Approved by hacker", updatedAt: serverTimestamp(), updatedBy: "staffA"
+  }));
+  await assertFails(updateDoc(doc(staffDb, "orders/order1"), {
+    orderStatus: "Diproses", paymentStatus: "Paid manually",
+    updatedAt: serverTimestamp(), updatedBy: "staffA"
+  }));
+  await assertFails(updateDoc(doc(staffDb, "orders/order1"), {
+    orderStatus: "Diproses", price: 1,
+    updatedAt: serverTimestamp(), updatedBy: "staffA"
+  }));
+});
+
 test("staff cannot change payment status", async () => {
   const db = env.authenticatedContext("staffA").firestore();
   await assertFails(updateDoc(doc(db, "orders/order1"), {
