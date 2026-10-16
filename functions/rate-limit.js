@@ -7,7 +7,9 @@ export function getRateLimitState(rateData, nowMs) {
   const windowStartMs = Math.floor(nowMs / WINDOW_MS) * WINDOW_MS;
   const sameWindow = rateData?.windowStartMs === windowStartMs;
   const storedCount = sameWindow ? rateData?.count : 0;
-  const count = Number.isSafeInteger(storedCount) && storedCount >= 0 ? storedCount : 0;
+  const count = Number.isSafeInteger(storedCount) && storedCount >= 0
+    ? storedCount
+    : (sameWindow ? MAX_ORDERS_PER_WINDOW : 0);
   return {
     allowed: count < MAX_ORDERS_PER_WINDOW,
     windowStartMs,
