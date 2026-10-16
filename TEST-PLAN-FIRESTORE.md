@@ -1,37 +1,45 @@
 # VOID STORE — Firestore Rules Test Report (Draft Only)
 
-Status: isolated Firebase Emulator tests have been executed successfully on the draft branch. This is not a production deployment or an end-to-end test against the live Firebase project.
+## Status snapshot — 2026-10-16
 
-## Automated test result
+**Production remains untouched.** No Firebase Rules were published, no commits were merged into `main`, and no live-site deployment or production test writes were performed.
 
-GitHub Actions run: https://github.com/VOIDSTORE-ID/web-/actions/runs/38863666192
+## Automated Rules tests
+
+Latest completed CI run: https://github.com/VOIDSTORE-ID/web-/actions/runs/38865540874
 
 - Workflow job: `firestore-rules` — completed successfully.
-- Test command: `npm run test:rules` against the local Firestore Emulator.
-- Result: 11 tests passed, 0 failed.
-- The test harness loads `firestore.rules` directly into an isolated emulator project named `voidstore-rules-isolated-test`.
+- Test command: `npm run test:rules` using an isolated Firestore Emulator.
+- Result: **13 tests passed, 0 failed**.
+- Test duration: about 3.7 seconds; full CI job took about 2 minutes due to dependency installation and emulator setup.
+- Test project ID: `voidstore-rules-isolated-test`; test data is cleared and recreated per test.
+- The emulator loads the draft `firestore.rules` directly; this does not prove the rules have been deployed or that the live site works end-to-end.
 
-Covered scenarios include public catalog reads, valid anonymous order creation, tampered price rejection, inactive product/payment-method rejection, anonymous order-read denial, active staff order access/progress updates, staff payment-status denial, owner payment-status update, inactive staff denial, staff catalog/role-escalation denial, and denial for unlisted collections.
+Covered scenarios: public ordered catalog/payment-method reads; valid anonymous order creation; manipulated product price/name rejection; inactive product/payment method rejection; anonymous order-read denial; active staff order reads/progress updates; staff payment-status denial; owner payment-status update; inactive staff denial; staff catalog/role escalation denial; owner product/payment-method edits with audit fields; staff order deletion denial and owner deletion allowed; unlisted collection denial.
 
-## Remaining checks before release
+## Dependency audit — unresolved blocker
 
-1. Review and browser-test the customer checkout, WhatsApp handoff, owner login, staff login, order status updates, product edits, payment-method toggles, and owner-only payment-status changes using a safe test environment.
-2. Confirm the production Firebase documents and fields match the draft Rules and UI assumptions. Do not run test writes against production.
-3. Reconcile this branch with the current `main` branch and inspect the final diff before any merge or deployment.
-4. Investigate dependency security findings from CI (`npm install` reported 32 advisories: 21 moderate, 10 high, 1 critical). Determine whether they affect runtime or development-only dependencies; resolve safely without blindly applying force upgrades.
-5. Add appropriate abuse mitigation and monitoring for anonymous order creation. Firestore Rules validate data but do not rate-limit requests; evaluate Firebase App Check and/or server-side controls.
-6. Verify the configured WhatsApp number and owner account/profile with non-sensitive checks before release.
-7. Confirm browser Firebase configuration is intended for public use; rely on Authentication and Rules, not config secrecy, to protect data.
-8. Run final regression tests after fixes and document exact commit SHA and rollback procedure.
+The CI dependency audit completed, but it reported **33 advisories: 1 critical, 13 high, 19 moderate, 0 low**. Notable affected packages include `tar` (critical), `firebase-tools`, `firebase`, `@firebase/firestore`, `@firebase/rules-unit-testing`, `undici`, `basic-ftp`, `braces`, `chokidar`, and proxy-related dependencies.
+
+The package list is currently used for draft testing; the storefront imports Firebase Web SDK 10.14.1 from Google's CDN. This does not automatically mean every npm finding is exploitable in the deployed browser app, but the critical/high findings must be triaged and resolved safely before release. The suggested fixes in the audit include major-version changes, so **do not run `npm audit fix --force` blindly**. Pin compatible versions, generate a lockfile, and rerun the isolated tests and audit.
+
+## Known release gaps
+
+1. Dependency vulnerabilities are unresolved; draft is **not release-ready**.
+2. Customer checkout, popup/WhatsApp handoff, owner/staff login, product editing, payment-method toggles, and order updates have not had a real browser end-to-end test.
+3. Production Firebase Rules remain deny-all; the Firebase-integrated draft will not work against production until a separately reviewed and approved Rules release.
+4. Anonymous order creation has no rate limiting. Evaluate App Check and/or trusted server-side abuse controls before opening public order writes.
+5. Branch comparison against `main` is divergent (draft 16 commits ahead, 1 behind at this snapshot); inspect and reconcile in draft before any release.
+6. Confirm public Firebase config, WhatsApp number, owner account/profile, and live Firestore document shapes using safe checks before release.
 
 ## Security expectations
 
-- Public users may read catalog and payment-method metadata and create only schema-valid orders tied to active product/method documents with matching names and price.
+- Public users may read catalog and payment-method metadata and create only schema-valid orders linked to active product/payment documents with matching names and prices.
 - Public users must not read orders or other users' profiles.
-- Active staff may read orders and update allowed order progress, but may not change payment status or manage catalog/users.
+- Active staff may read orders and update order progress, but may not change payment status or manage catalog/users.
 - Only an active owner may change payment status, manage catalog/payment methods, or manage staff profiles.
 - Unlisted collections remain denied by default.
 
-## Safety status
+## Release boundary
 
-The production Firebase Rules were not published. The live GitHub Pages site and `main` branch were not changed by this report update. Do not deploy until the remaining checks are completed and a final production release is explicitly approved.
+Do not publish Firebase Rules, merge to `main`, or deploy until dependency findings are addressed, browser end-to-end checks are completed in a safe test environment, final regression tests pass, and the user explicitly approves the production release.
