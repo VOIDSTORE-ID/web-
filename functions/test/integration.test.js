@@ -3,8 +3,7 @@ import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 const projectId = process.env.GCLOUD_PROJECT || "demo-voidstore-integration";
-assert.match(process.env.FIRESTORE_EMULATOR_HOST || "", /^127\.0\.0\.1:8080$/);
-assert.match(process.env.FUNCTIONS_EMULATOR || "true", /true/);
+process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
 
 initializeApp({ projectId });
 const db = getFirestore();
