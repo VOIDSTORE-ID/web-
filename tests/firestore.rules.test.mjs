@@ -61,18 +61,18 @@ test("public catalog reads succeed", async () => {
   await assertSucceeds(getDocs(query(collection(db, "paymentMethods"), orderBy("sortOrder"))));
 });
 
-test("anonymous customer can create a valid order", async () => {
+test("anonymous clients cannot create orders directly; backend endpoint is required", async () => {
   const db = env.unauthenticatedContext().firestore();
-  await assertSucceeds(setDoc(doc(db, "orders/newOrder"), validOrder()));
+  await assertFails(setDoc(doc(db, "orders/newOrder"), validOrder()));
 });
 
-test("order with manipulated price or product name is denied", async () => {
+test("direct client order writes are denied regardless of supplied price or name", async () => {
   const db = env.unauthenticatedContext().firestore();
   await assertFails(setDoc(doc(db, "orders/badPrice"), validOrder({ price: 1 })));
   await assertFails(setDoc(doc(db, "orders/badName"), validOrder({ productName: "Different product" })));
 });
 
-test("order using inactive product or payment method is denied", async () => {
+test("direct client order writes are denied for inactive product or payment method", async () => {
   const db = env.unauthenticatedContext().firestore();
   await assertFails(setDoc(doc(db, "orders/disabledProduct"), validOrder({ productId: "disabled_uc", productName: "Disabled UC", price: 20000 })));
   await assertFails(setDoc(doc(db, "orders/disabledMethod"), validOrder({ paymentMethodId: "disabled_method", paymentMethodName: "Disabled method" })));
@@ -176,14 +176,12 @@ test("order rejects mismatched payment method metadata", async () => {
 });
 
 
-// Characterization test: Firestore Rules alone do not rate-limit anonymous order creation.
-// This intentionally documents the current spam-abuse gap; it is not proof of spam protection.
-// Replace with rejection assertions once a trusted rate-limiting backend is implemented.
-test("documents that repeated anonymous orders are currently accepted (rate-limit gap)", async () => {
+// Regression test: repeated direct client writes must be blocked by Rules so clients cannot bypass backend rate limiting.
+test("repeated anonymous direct order writes are denied", async () => {
   const db = env.unauthenticatedContext().firestore();
   const attempts = Array.from({ length: 10 }, (_, i) =>
     setDoc(doc(db, `orders/repeatOrder${i}`), validOrder())
   );
   const results = await Promise.allSettled(attempts);
-  assert.equal(results.filter(result => result.status === "fulfilled").length, 10);
+  assert.equal(results.filter(result => result.status === "fulfilled").length, 0);
 });
