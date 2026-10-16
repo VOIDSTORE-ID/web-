@@ -6,7 +6,7 @@
 
 ## Automated Rules tests
 
-The latest workflow run at the time of this report is https://github.com/VOIDSTORE-ID/web-/actions/runs/38870215128, running against draft commit `3f085bb3d2716521ffa1ce338e2d07823d370571`. Its log shows the isolated Firestore Emulator test command ran; verify the final run conclusion and test summary in GitHub Actions before treating it as a pass.
+The latest workflow run is https://github.com/VOIDSTORE-ID/web-/actions/runs/38871297530, running against draft commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. The run completed with **failure by design of the new security gate**: dependency installation and the Firestore Rules emulator test step both succeeded, while `Block release-quality CI on critical or high advisories` failed. This confirms the gate blocks release-quality CI while critical/high dependency advisories remain; it does not mean the Rules tests failed.
 
 The prior expanded Rules suite reported 15 tests passing and 0 failing in run https://github.com/VOIDSTORE-ID/web-/actions/runs/38869463318. These are Firestore Rules emulator tests only; they do not test checkout or login through a real browser.
 
@@ -20,7 +20,7 @@ The latest inspected CI log reported **33 advisories: 1 critical, 13 high, 19 mo
 
 The repository has no committed `package-lock.json`; CI currently uses `npm install`, so dependency resolution is not reproducible. A lockfile should be generated and committed only after dependency versions are reviewed and tests pass. Do not run `npm audit fix --force` blindly: suggested remediations include major-version changes.
 
-A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. It allows the Rules emulator tests to run, then fails the workflow if critical or high advisories remain. This is a release-quality guardrail, not a vulnerability fix. The next workflow run must be checked to confirm the gate behaves as intended.
+A new CI security gate was added in commit `7a205fc5f95bd3565e6c5133bdc8e196f26d7f1f`. Run `38871297530` confirmed it behaves as intended: the Rules emulator tests passed, then the workflow failed because critical/high advisories remain. This is a release-quality guardrail, not a vulnerability fix.
 
 ## Known release gaps
 
