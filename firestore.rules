@@ -182,5 +182,10 @@ service cloud.firestore {
 
       allow delete: if owner();
     }
+
+    // Explicit default deny for every collection not listed above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
