@@ -6,18 +6,18 @@
 
 ## Automated Rules tests
 
-Latest previously completed CI run: https://github.com/VOIDSTORE-ID/web-/actions/runs/38865540874
+Latest completed CI run before expanded malformed-order tests: https://github.com/VOIDSTORE-ID/web-/actions/runs/38868604458 — success, 13 tests passed, 0 failed.
 
-A new CI run triggered by the checkout change is in progress: https://github.com/VOIDSTORE-ID/web-/actions/runs/38868604458. Do not treat it as passed until GitHub reports a completed successful result.
+The latest commit adds two regression tests (unknown/invalid order fields and mismatched payment metadata). Its CI run is pending: https://github.com/VOIDSTORE-ID/web-/actions/runs/38869463318. Do not claim these added tests pass until that run completes.
 
-- Workflow job: `firestore-rules` — completed successfully.
+- Workflow job: `firestore-rules` — latest completed run succeeded; expanded run pending.
 - Test command: `npm run test:rules` using an isolated Firestore Emulator.
-- Result: **13 tests passed, 0 failed**.
+- Last confirmed result: **13 tests passed, 0 failed**; the two new tests have not yet been confirmed.
 - Test duration: about 3.7 seconds; full CI job took about 2 minutes due to dependency installation and emulator setup.
 - Test project ID: `voidstore-rules-isolated-test`; test data is cleared and recreated per test.
 - The emulator loads the draft `firestore.rules` directly; this does not prove the rules have been deployed or that the live site works end-to-end.
 
-Covered scenarios: public ordered catalog/payment-method reads; valid anonymous order creation; manipulated product price/name rejection; inactive product/payment method rejection; anonymous order-read denial; active staff order reads/progress updates; staff payment-status denial; owner payment-status update; inactive staff denial; staff catalog/role escalation denial; owner product/payment-method edits with audit fields; staff order deletion denial and owner deletion allowed; unlisted collection denial.
+Covered scenarios in the last confirmed run: public ordered catalog/payment-method reads; valid anonymous order creation; manipulated product price/name rejection; inactive product/payment method rejection; anonymous order-read denial; active staff order reads/progress updates; staff payment-status denial; owner payment-status update; inactive staff denial; staff catalog/role escalation denial; owner product/payment-method edits with audit fields; staff order deletion denial and owner deletion allowed; unlisted collection denial. Two new pending regression tests add unknown-field, invalid customer/player/phone data, and mismatched payment-method metadata cases.
 
 ## Dependency audit — unresolved blocker
 
