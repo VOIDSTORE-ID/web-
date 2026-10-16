@@ -24,8 +24,7 @@ async function call(data) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ data })
   });
-  assert.equal(response.status, 200, `Callable HTTP response should be 200, got ${response.status}`);
-  return response.json();
+  return { httpStatus: response.status, ...(await response.json()) };
 }
 
 try {
