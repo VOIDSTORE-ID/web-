@@ -5,7 +5,7 @@ import {
   assertSucceeds,
   assertFails
 } from "@firebase/rules-unit-testing";
-import { doc, setDoc, getDoc, getDocs, collection, updateDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
+import { doc, setDoc, getDoc, getDocs, collection, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
 
 const projectId = "voidstore-rules-isolated-test";
 let env;
@@ -65,9 +65,10 @@ test("anonymous customer can create a valid order", async () => {
   await assertSucceeds(setDoc(doc(db, "orders/newOrder"), validOrder()));
 });
 
-test("order with manipulated price is denied", async () => {
+test("order with manipulated price or product name is denied", async () => {
   const db = env.unauthenticatedContext().firestore();
   await assertFails(setDoc(doc(db, "orders/badPrice"), validOrder({ price: 1 })));
+  await assertFails(setDoc(doc(db, "orders/badName"), validOrder({ productName: "Different product" })));
 });
 
 test("order using inactive product or payment method is denied", async () => {
@@ -95,6 +96,10 @@ test("staff cannot change payment status", async () => {
   await assertFails(updateDoc(doc(db, "orders/order1"), {
     paymentStatus: "Dibayar", updatedAt: serverTimestamp(), updatedBy: "staffA"
   }));
+  await assertFails(updateDoc(doc(db, "orders/order1"), {
+    orderStatus: "Diproses", paymentStatus: "Dibayar",
+    updatedAt: serverTimestamp(), updatedBy: "staffA"
+  }));
 });
 
 test("owner can change payment status", async () => {
@@ -113,6 +118,25 @@ test("staff cannot edit catalog or promote self", async () => {
   const db = env.authenticatedContext("staffA").firestore();
   await assertFails(updateDoc(doc(db, "products/60_uc"), { name: "Fake price", price: 1, active: true, sortOrder: 1, updatedAt: serverTimestamp(), updatedBy: "staffA" }));
   await assertFails(updateDoc(doc(db, "users/staffA"), { role: "owner", active: true }));
+});
+
+test("owner can edit product and payment method with audit fields", async () => {
+  const db = env.authenticatedContext("ownerA").firestore();
+  await assertSucceeds(updateDoc(doc(db, "products/60_uc"), {
+    price: 17000, name: "60 UC", active: true, sortOrder: 1,
+    updatedAt: serverTimestamp(), updatedBy: "ownerA"
+  }));
+  await assertSucceeds(updateDoc(doc(db, "paymentMethods/dana"), {
+    name: "DANA", active: false, sortOrder: 1,
+    updatedAt: serverTimestamp(), updatedBy: "ownerA"
+  }));
+});
+
+test("staff cannot delete orders; owner can", async () => {
+  const staffDb = env.authenticatedContext("staffA").firestore();
+  await assertFails(deleteDoc(doc(staffDb, "orders/order1")));
+  const ownerDb = env.authenticatedContext("ownerA").firestore();
+  await assertSucceeds(deleteDoc(doc(ownerDb, "orders/order1")));
 });
 
 test("unlisted collections are denied", async () => {
